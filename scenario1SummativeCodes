@@ -1,0 +1,80 @@
+//  *****************************************************
+//    My work Deogratias Amani. Summative question 1
+//  *****************************************************
+
+// including important library
+#include <LiquidCrystal.h>
+
+int rs = 12, en = 11, db4 = 7, db5 = 8, db6 = 9, db7 = 10;
+LiquidCrystal lcd(rs, en, db4, db5, db6, db7);
+
+// ultrasonic sensor declaration
+const int trigPn = 5;
+const int echoPn = 6;
+
+// LED declaration
+const int ledPn = 3;
+
+// Buzzer declaration
+const int buzzerPn = 4;
+
+// define checking variables
+long inputfromEchopn;
+int distance_in_Cm;
+int is_person_close;
+int trespassing_Distance = 200;
+
+void setup() {
+  pinMode(trigPn, OUTPUT); // trigPn as an Output
+  pinMode(echoPn, INPUT); // echoPn as an Input
+  pinMode(buzzerPn, OUTPUT);
+  pinMode(ledPn, OUTPUT);
+  lcd.begin(16, 2);
+  Serial.begin(9600); // Starts the serial communication
+}
+
+
+void loop() {
+  // This clears the trigPn
+  digitalWrite(trigPn, LOW);
+  delayMicroseconds(2);
+ 
+  // This sets the trigPn on HIGH state for 10 micro-seconds
+  digitalWrite(trigPn, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPn, LOW);
+ 
+  // Reads the echoPn, returns the sound wave travel time in microseconds
+  inputfromEchopn = pulseIn(echoPn, HIGH);
+ 
+  // Calculating the distance
+  distance_in_Cm= inputfromEchopn*0.034/2;
+ 
+  is_person_close= distance_in_Cm;
+  if (is_person_close<= trespassing_Distance){
+    digitalWrite(buzzerPn, HIGH);// if person found turn on everything
+    digitalWrite(ledPn, HIGH);
+    
+    lcd.setCursor(0,0); //print on the LCD
+    lcd.print("Suspect In : ");
+    lcd.setCursor(0,1);
+    lcd.print(" ");
+    lcd.print(distance_in_Cm);
+    lcd.print(" Cm");
+    
+    delay(2000); // wait for cevery 2 seconds before below instruction
+    digitalWrite(ledPn, LOW);
+    digitalWrite(buzzerPn, LOW);
+    delay(2000);
+  }
+  else{
+    lcd.clear(); // screen is not showing anything
+    digitalWrite(buzzerPn, LOW); // turn off everything
+    digitalWrite(ledPn, LOW);
+  }
+ 
+  // For testing lets print the distance on the Serial Monitor
+  Serial.print("Object Dectected in: ");
+  Serial.print(distance_in_Cm);
+  Serial.println(" cm");
+}
