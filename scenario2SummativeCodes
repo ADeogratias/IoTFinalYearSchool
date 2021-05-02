@@ -1,0 +1,87 @@
+//  *****************************************************
+//    My work Deogratias Amani. Summative question 2
+//  *****************************************************
+
+// including important libraries
+#include "ThingSpeak.h"
+#include <ESP8266WiFi.h>
+
+char ssid[] = "CANALBOX-3A77";   // your network SSID (name) 
+char pass[] = "5314829132IoT";   // your network password
+WiFiClient  client; 
+
+// including mychannel details on thingspeak
+unsigned long myChannelNumber = 1342614;
+const char * myWriteAPIKey = "YCTU41QDH7U82V68";
+const char * myReadAPIKey = "QU3BD0VPFJLEIIFU";
+
+//important variables declaration
+static const uint8_t D1 = 5;
+int ledpn = D1;
+int lightpn = A0;
+
+//we declare variable for the light intensity
+int lightIntensit;
+
+//initiating everything
+void setup() {
+  Serial.println(F("********* Summative Light Intensity Home Luxury ************"));
+  WiFi.mode(WIFI_STA);
+  ThingSpeak.begin(client); // Initialize ThingSpeak
+  pinMode(lightpn,INPUT);
+  pinMode(ledpn,OUTPUT);
+  Serial.begin(115200);
+  delay(10);
+}
+
+void loop() {
+  // Connect or reconnect to WiFi
+  if(WiFi.status() != WL_CONNECTED){
+    Serial.print("Attempting to connect to SSID: ");
+    Serial.println("CANALBOX-3A77");
+    while(WiFi.status() != WL_CONNECTED){
+      WiFi.begin(ssid, pass); // Connect to WPA/WPA2 network. Change this line if using open or WEP network
+      Serial.print(".");
+      delay(5000);
+    }
+    Serial.println("\nConnected.");
+  }
+  //end internet connection
+  
+  lightIntensit = analogRead(lightpn);  // read from light sensor
+  
+  // set the fields with the values
+  ThingSpeak.setField(1, lightIntensit);
+
+  // The scenario says
+  // The designed system will automatically turn the LED on/off at the same time it is updating Thingspeak.
+  int x = ThingSpeak.writeFields(myChannelNumber, myWriteAPIKey); // updating ThingSpeak channel
+  
+  //read data that was previously added
+  long readFromThingspeak = ThingSpeak.readLongField(myChannelNumber, 1, myReadAPIKey);
+  if(x == 200){
+    Serial.println("Channel update successful.");
+    }
+  else{
+    Serial.println("Problem updating channel. HTTP error code " + String(x));
+    }
+
+  //Switch on/off Thingspeak as it is updating Thingspeak 
+  if(lightIntensit>580){
+    digitalWrite(ledpn,HIGH);
+    }
+  else{ 
+    digitalWrite(ledpn, LOW);
+    }
+    
+  Serial.println(lightIntensit);  // for testing
+  
+//  //Switch on/off after reading from Thingspeak
+//  if(readFromThingspeak>600){
+//    digitalWrite(ledpn,HIGH);
+//    }
+//  else{ 
+//    digitalWrite(ledpn, LOW);
+//    }
+   delay(5000); // 5 seconds delay thought Thingspeak does not allow below 15sec
+}
